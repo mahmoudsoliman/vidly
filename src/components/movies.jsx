@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import HeartLike from '../components/heartLike'
-import Pagination from '../components/pagination'
-import FilterList from '../components/filterList'
+import HeartLike from '../common/heartLike'
+import Pagination from '../common/pagination'
+import FilterList from '../common/filterList'
 import { getMovies, deleteMovie } from '../services/fakeMovieService'
 import _ from 'lodash'
  
@@ -67,7 +67,8 @@ export default class movies extends Component {
         const filteredMovies = genre === 'All Genres'? this.state.movies : this.state.movies.filter(movie => movie.genre.name === genre)
         this.setState({
             filteredMovies,
-            currentGenre: genre
+            currentGenre: genre,
+            currentPage: 1
         })
     }
 
