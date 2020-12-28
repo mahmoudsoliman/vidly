@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
-import HeartLike from '../common/heartLike'
-import Pagination from '../common/pagination'
-import FilterList from '../common/filterList'
+import HeartLike from './common/heartLike'
+import Pagination from './common/pagination'
+import FilterList from './common/filterList'
+import Table from './common/table'
 import { getMovies, deleteMovie } from '../services/fakeMovieService'
+import { getGenres } from '../services/fakeGenreService'
 import _ from 'lodash'
  
 export default class movies extends Component {
@@ -12,12 +14,38 @@ export default class movies extends Component {
         pageSize: 4,
         genres: [],
         currentGenre: 'All Genres',
-        filteredMovies: []
+        columns: [
+            {
+                label: 'Title',
+                anchor: 'title'
+            },
+            {
+                label: 'Genre',
+                anchor: 'genre.name'
+            },
+            {
+                label: 'Stock',
+                anchor: 'numberInStock'
+            },
+            {
+                label: 'Rate',
+                anchor: 'dailyRentalRate'
+            },
+            {
+                label: '',
+                element: movie => <HeartLike id={movie._id} isLiked={movie.liked} onLike={(id) => this.handleMovieLiked(id)} onDislike = {(id) => this.handleMovieDisliked(id)}/>
+            },
+            {
+                label: '',
+                element: movie => <button className="btn btn-danger btn-sm" onClick={() => this.handleDeleteMovie(movie._id)}>Delete</button>
+            }
+        ],
+        columnSort: {path: 'title', order: 'asc'}
     }
 
     componentDidMount = () => {
         const movies = getMovies()
-        const genres = ['All Genres', ..._.uniq(movies.map(movie => movie.genre.name))]
+        const genres = ['All Genres', ...getGenres().map(genre => genre.name)]
         this.setState({ movies, genres, filteredMovies: movies })
     }
 
@@ -64,11 +92,15 @@ export default class movies extends Component {
     }
 
     handleFilterChange = (genre) => {
-        const filteredMovies = genre === 'All Genres'? this.state.movies : this.state.movies.filter(movie => movie.genre.name === genre)
         this.setState({
-            filteredMovies,
             currentGenre: genre,
             currentPage: 1
+        })
+    }
+
+    handleSort = (columnSort) => {
+        this.setState({
+            columnSort: {path: columnSort.path, order: columnSort.order}
         })
     }
 
@@ -78,63 +110,32 @@ export default class movies extends Component {
             pageSize,
             currentPage,
             genres,
-            filteredMovies,
-            currentGenre
+            currentGenre,
+            columns,
+            columnSort
         } = this.state
-
+        console.log({columnSort})
+        const filteredMovies = currentGenre === 'All Genres'? movies : movies.filter(movie => movie.genre.name === currentGenre)
         const moviesCount = filteredMovies.length
+        const sortedMovies = _(filteredMovies).orderBy([columnSort.path], [columnSort.order]).value()
+        console.log({filteredMovies})
+        console.log({sortedMovies})
         const startIndex = (currentPage - 1) * pageSize
-        const currentPageMovies = _(filteredMovies).slice(startIndex, startIndex + pageSize).value()
+        const currentPageMovies = _(sortedMovies).slice(startIndex, startIndex + pageSize).value()
         
         return (
             moviesCount > 0?(
-                <div className="container-fluid">
                     <div className="row">
-                        <h1>Showing {moviesCount} {moviesCount === 1? 'movie' : 'movies'} in the database.</h1>
-                    </div>
-                    <div className="row">
-                        <div className="col-sm-3">
+                        <div className="col-2 m-2">
                             <FilterList filters={genres} currentFilter={currentGenre} onFilterChange={(genre) => this.handleFilterChange(genre)}/>
                         </div>
                         <div className="col">
-                    
-                            <table className="table">
-                                <thead>
-                                    <tr className="row">
-                                        <th className="col text-center">Title</th>
-                                        <th className="col text-center">Genre</th>
-                                        <th className="col text-center">Stock</th>
-                                        <th className="col text-center">Rate</th>
-                                        <th className="col text-center"></th>
-                                        <th className="col text-center"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {
-                                        currentPageMovies.map(movie => (
-                                                <tr className="row" key={movie._id} >
-                                                    <td className="col text-center">{movie.title}</td>
-                                                    <td className="col text-center">{movie.genre.name}</td>
-                                                    <td className="col text-center">{movie.numberInStock}</td>
-                                                    <td className="col text-center">{movie.dailyRentalRate}</td>
-                                                    <td className="col text-center">
-                                                        <HeartLike id={movie._id} isLiked={movie.liked} onLike={(id) => this.handleMovieLiked(id)} onDislike = {(id) => this.handleMovieDisliked(id)}/>
-                                                    </td>
-                                                    <td className="col text-center">
-                                                        <button className="btn btn-danger btn-sm" onClick={() => this.handleDeleteMovie(movie._id)}>Delete</button>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )
-                                    }
-                                </tbody>
-                            </table> 
+                            <h2>Showing {moviesCount} {moviesCount === 1? 'movie' : 'movies'} in the database.</h2>
+                            <Table columns={columns} data={currentPageMovies} columnSort={columnSort} onSort={(columnSort) => this.handleSort(columnSort)}/>
+                            <Pagination currentPage={currentPage} itemsCount={moviesCount} pageSize={pageSize} onPageChange={(page) => this.handlePageChange(page)}/>
                         </div>
                     </div>
-                    <div className="row justify-content-center">
-                        <Pagination currentPage={currentPage} itemsCount={moviesCount} pageSize={pageSize} onPageChange={(page) => this.handlePageChange(page)}/>
-                    </div>
-                </div>) : (
+                ) : (
                 <div>
                     <div>
                         <h1> No movies to show</h1>
