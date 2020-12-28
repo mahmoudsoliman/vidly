@@ -18,6 +18,12 @@ export default class TableHeader extends Component {
         onSort(newColumnSort)
     }
 
+    renderSortIcon = (column) => {
+        const columnSort = this.props.columnSort
+        if(columnSort.path !== column.anchor) return null
+        return columnSort.order === 'asc'? <i className="fa fa-sort-asc"/> : <i className="fa fa-sort-desc" />
+    }
+
     render() {
         const {
             columns
@@ -26,7 +32,7 @@ export default class TableHeader extends Component {
         return (
             <thead>
                 <tr className="row">
-                    {columns.map((column, indx) => <th key={indx} className="col text-center clickable" onClick={() => this.handleSort(column)}>{column.label}</th>)}
+                    {columns.map((column, indx) => <th key={indx} className={"col text-center clickable"} onClick={() => this.handleSort(column)}>{column.label} {this.renderSortIcon(column)}</th>)}
                 </tr>
             </thead>
         )
