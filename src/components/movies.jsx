@@ -6,6 +6,7 @@ import Table from './common/table'
 import { getMovies, deleteMovie } from '../services/fakeMovieService'
 import { getGenres } from '../services/fakeGenreService'
 import _ from 'lodash'
+import { Link } from 'react-router-dom'
  
 export default class movies extends Component {
     state = {
@@ -17,7 +18,7 @@ export default class movies extends Component {
         columns: [
             {
                 label: 'Title',
-                anchor: 'title'
+                element: movie => <Link to={`/movies/${movie._id}`}>{movie.title}</Link>
             },
             {
                 label: 'Genre',
@@ -114,12 +115,10 @@ export default class movies extends Component {
             columns,
             columnSort
         } = this.state
-        console.log({columnSort})
+
         const filteredMovies = currentGenre === 'All Genres'? movies : movies.filter(movie => movie.genre.name === currentGenre)
         const moviesCount = filteredMovies.length
         const sortedMovies = _(filteredMovies).orderBy([columnSort.path], [columnSort.order]).value()
-        console.log({filteredMovies})
-        console.log({sortedMovies})
         const startIndex = (currentPage - 1) * pageSize
         const currentPageMovies = _(sortedMovies).slice(startIndex, startIndex + pageSize).value()
         
