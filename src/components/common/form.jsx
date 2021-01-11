@@ -15,6 +15,7 @@ export default class Form extends Component {
       for(let item of error.details){
         errors[item.path[0]] = item.message
       }
+      console.log({errors})
       return errors
     }
     return null
@@ -51,17 +52,36 @@ export default class Form extends Component {
     this.doSubmit();
   }
 
-  renderInputs = (inputs) => {
-    return inputs.map(input => 
-      <div key={input.name} className="form-group">
-        <label htmlFor={input.name}>{input.label}</label>
-        <input name={input.name} type={input.type} className="form-control" id={input.name} placeholder={input.label} onChange={this.handleChange} value={this.state.data[input.name]}/>
-        {this.state.errors[input.name] && <div className="alert alert-danger">{this.state.errors[input.name]}</div>}
+  renderInput = (name, label, type = 'text') => {
+    const {
+      data,
+      errors
+    } = this.state
+
+    return ( 
+      <div key={name} className="form-group">
+        <label htmlFor={name}>{label}</label>
+        <input name={name} type={type} className="form-control" id={name} placeholder={label} onChange={this.handleChange} value={data[name]}/>
+        {errors[name] && <div className="alert alert-danger">{errors[name]}</div>}
       </div>
     )
   }
 
   renderButton = (action) => {
     return <button type="submit" className="btn btn-primary" disabled={this.validate()}>{action}</button>
+  }
+
+  renderSelect = (name, label, options, currentOption) => {
+    return(
+      <div className="form-group">
+        <label htmlFor={name}>{label}</label>
+        <select name={name} className="form-control" id={name} value={currentOption} onChange={this.handleChange}>
+          <option value="" key="none"></option>
+          {
+            options.map((option, indx) => <option key={indx} value={option.value}>{option.label}</option>)
+          }
+        </select>
+      </div>
+    )
   }
 }

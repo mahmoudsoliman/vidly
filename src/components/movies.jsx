@@ -7,6 +7,8 @@ import { getMovies, deleteMovie } from '../services/fakeMovieService'
 import { getGenres } from '../services/fakeGenreService'
 import _ from 'lodash'
 import { Link } from 'react-router-dom'
+import { string } from 'prop-types'
+import SearchBox from './searchBox'
  
 export default class movies extends Component {
     state = {
@@ -15,6 +17,7 @@ export default class movies extends Component {
         pageSize: 4,
         genres: [],
         currentGenre: 'All Genres',
+        searchQuery: "",
         columns: [
             {
                 label: 'Title',
@@ -95,7 +98,8 @@ export default class movies extends Component {
     handleFilterChange = (genre) => {
         this.setState({
             currentGenre: genre,
-            currentPage: 1
+            currentPage: 1,
+            searchQuery: ""
         })
     }
 
@@ -103,6 +107,33 @@ export default class movies extends Component {
         this.setState({
             columnSort: {path: columnSort.path, order: columnSort.order}
         })
+    }
+
+    handleSearch = (query) => {
+        this.setState({
+            currentPage: 1,
+            currentGenre: null,
+            searchQuery: query
+        })
+    }
+
+    filterMoviesByGenre = (movies, genre) => {
+        return (genre === 'All Genres' || _.isNil(genre))? movies 
+            : movies.filter(movie => movie.genre.name === genre)
+    }
+
+    filterMoviesBySearchQuery = (movies, query) => {
+        return _.isEmpty(query)? movies : movies.filter(movie => movie.title.toLowerCase().startsWith(query.toLowerCase()))
+    }
+
+    filterMovies = () => {
+        const {
+            currentGenre,
+            searchQuery,
+            movies
+        } = this.state
+
+        return this.filterMoviesBySearchQuery(this.filterMoviesByGenre(movies, currentGenre), searchQuery)
     }
 
     render() {
@@ -116,20 +147,24 @@ export default class movies extends Component {
             columnSort
         } = this.state
 
-        const filteredMovies = currentGenre === 'All Genres'? movies : movies.filter(movie => movie.genre.name === currentGenre)
+        const filteredMovies = this.filterMovies()
         const moviesCount = filteredMovies.length
         const sortedMovies = _(filteredMovies).orderBy([columnSort.path], [columnSort.order]).value()
         const startIndex = (currentPage - 1) * pageSize
         const currentPageMovies = _(sortedMovies).slice(startIndex, startIndex + pageSize).value()
         
         return (
-            moviesCount > 0?(
+            movies.length > 0?(
                     <div className="row">
                         <div className="col-2 m-2">
                             <FilterList filters={genres} currentFilter={currentGenre} onFilterChange={(genre) => this.handleFilterChange(genre)}/>
                         </div>
                         <div className="col">
+                            <Link to="/movies/new">
+                                <button className="btn btn-primary m-2" >New Movie</button>
+                            </Link>
                             <h2>Showing {moviesCount} {moviesCount === 1? 'movie' : 'movies'} in the database.</h2>
+                            <SearchBox quer={this.state.searchQuery} onChange={(query) => this.handleSearch(query)}/>
                             <Table columns={columns} data={currentPageMovies} columnSort={columnSort} onSort={(columnSort) => this.handleSort(columnSort)}/>
                             <Pagination currentPage={currentPage} itemsCount={moviesCount} pageSize={pageSize} onPageChange={(page) => this.handlePageChange(page)}/>
                         </div>

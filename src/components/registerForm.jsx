@@ -1,25 +1,29 @@
+import Joi from 'joi-browser';
 import React from 'react'
-import Joi from 'joi-browser'
-import Form from './common/form'
+import Form from './common/form';
 
-export default class LoginForm extends Form {
+export default class RegisterForm extends Form {
   state = {
-    data: { email: "", password: "" },
+    data: { email: "", password: "", name: "" },
     errors: {}
   };
   
   doSubmit = () => {
-    console.log('Logged in')
+    console.log('Registered')
   }
 
   validationSchema = {
     email: Joi.string()
       .email()
       .required()
-      .label("Email Address"),
+      .label('Email Address'),
     password: Joi.string()
       .required()
-      .label("Password")
+      .min(5)
+      .label('Password'),
+    name: Joi.string()
+      .required()
+      .label('Name')
   };
 
   render() {
@@ -29,7 +33,8 @@ export default class LoginForm extends Form {
         <form onSubmit={this.handleSubmit}>
           {this.renderInput('email', 'Email Address', 'email')}
           {this.renderInput('password', 'Password', 'password')}
-          {this.renderButton('Login')}
+          {this.renderInput('name', 'Name')}
+          {this.renderButton('Register')}
         </form>
       </div>
     )
