@@ -10,11 +10,13 @@ import MovieForm from './components/movieForm'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import LoginForm from './components/loginForm';
 import RegisterForm from './components/registerForm';
+import { ToastContainer } from 'react-toastify'
 
 export default class App extends Component {
   render() {
     return (
       <div>
+        <ToastContainer/>
         <NavBar/>
         <Switch>
           <Route path="/movies/:id" render={(props) => <MovieForm {...props} />}></Route>

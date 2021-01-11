@@ -15,7 +15,6 @@ export default class Form extends Component {
       for(let item of error.details){
         errors[item.path[0]] = item.message
       }
-      console.log({errors})
       return errors
     }
     return null

@@ -1,24 +1,31 @@
 import React from 'react'
 import Form from './common/form'
-import { getGenres } from '../services/fakeGenreService'
-import { saveMovie, getMovie } from '../services/fakeMovieService'
+import { createMovie, updateMovie, getMovie } from '../services/movieService'
+import { getGenres } from '../services/geneService'
 import Joi from 'joi-browser'
 
 export default class MovieForm extends Form {
   state = {
     data: { title: "", genreId: "", stock: 0, rate: 0.0  },
     errors: {},
-    genres: getGenres()
+    genres: []
   };
-  
-  componentDidMount = () => {
+
+  populateGengres = async () => {
+    const genres = await getGenres()
+    this.setState({genres})
+  }
+
+  populateMovie = async () => { 
     const movieId = this.props.match.params.id
     if(movieId === 'new') return
 
-    const movie = getMovie(movieId)
-    console.log({movie})
-    if(!movie){
-      return this.props.history.replace('/not-found')
+    let movie = {}
+    try {
+      movie = await getMovie(movieId)
+    } catch (error) {
+      if(error.response && error.response.status === 404)
+        return this.props.history.replace('/not-found')
     }
     
     this.setState({
@@ -30,8 +37,13 @@ export default class MovieForm extends Form {
       }
     })
   }
+  
+  async componentDidMount() {
+    await this.populateGengres()
+    await this.populateMovie()
+  }
 
-  doSubmit = () => {
+  doSubmit = async () => {
     const {
       title,
       genreId,
@@ -39,15 +51,24 @@ export default class MovieForm extends Form {
       rate
     } = this.state.data
 
-    saveMovie({
-      _id: this.props.match.params.id === 'new'? null : this.props.match.params.id,
-      title,
-      genreId,
-      numberInStock: stock,
-      dailyRentalRate: rate 
-    })
+    if(this.props.match.params.id === 'new') {
+      await createMovie({
+        title,
+        genreId,
+        numberInStock: stock,
+        dailyRentalRate: rate 
+      })
+    }
+    else{
+      await updateMovie(this.props.match.params.id, {
+        title,
+        genreId,
+        numberInStock: stock,
+        dailyRentalRate: rate 
+      })
+    }
+    
     this.props.history.push("/movies")
-    console.log('Movie Created')
   }
 
   validationSchema = {
@@ -55,7 +76,6 @@ export default class MovieForm extends Form {
       .required()
       .label("Title"),
     genreId: Joi.string()
-      .valid(this.state.genres.map(genre => genre._id))
       .required()
       .label("Genre"),
     stock: Joi.number()

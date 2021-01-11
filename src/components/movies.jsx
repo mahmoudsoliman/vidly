@@ -3,12 +3,12 @@ import HeartLike from './common/heartLike'
 import Pagination from './common/pagination'
 import FilterList from './common/filterList'
 import Table from './common/table'
-import { getMovies, deleteMovie } from '../services/fakeMovieService'
-import { getGenres } from '../services/fakeGenreService'
+import { getMovies, deleteMovie } from '../services/movieService'
+import { getGenres } from '../services/geneService'
 import _ from 'lodash'
 import { Link } from 'react-router-dom'
-import { string } from 'prop-types'
 import SearchBox from './searchBox'
+import { toast } from 'react-toastify'
  
 export default class movies extends Component {
     state = {
@@ -47,21 +47,29 @@ export default class movies extends Component {
         columnSort: {path: 'title', order: 'asc'}
     }
 
-    componentDidMount = () => {
-        const movies = getMovies()
-        const genres = ['All Genres', ...getGenres().map(genre => genre.name)]
+    async componentDidMount () {
+        const movies = await getMovies()
+        const genres = ['All Genres', ...(await getGenres()).map(genre => genre.name)]
         this.setState({ movies, genres, filteredMovies: movies })
     }
 
-    handleDeleteMovie = (id) => {
-        deleteMovie(id)
+    handleDeleteMovie = async (id) => {
+        const originalMovies = this.state.movies
         this.setState({
-            movies: getMovies()
+            movies: this.state.movies.filter(movie => movie._id.toString() !== id.toString())
         })
+        try {
+            await deleteMovie(id)
+        } catch (error) {
+            if(error.response && error.response.status === 404)
+                toast("This movie does not exist")
+            this.setState({
+                movies: originalMovies
+            })
+        }
     }
 
     handleMovieLiked = (id) => {
-        console.log("Like " + id)
         this.setState({
             movies: this.state.movies.map(movie => {
                 return movie._id === id? {
@@ -75,7 +83,6 @@ export default class movies extends Component {
     }
 
     handleMovieDisliked = (id) => {
-        console.log("Dislike " + id)
         this.setState({
             movies: this.state.movies.map(movie => {
                 return movie._id === id? {
@@ -89,7 +96,6 @@ export default class movies extends Component {
     }
 
     handlePageChange = (page) => {
-        console.log(page)
         this.setState({
             currentPage: page
         })
