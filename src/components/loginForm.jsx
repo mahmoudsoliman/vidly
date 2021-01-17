@@ -1,6 +1,8 @@
 import React from 'react'
 import Joi from 'joi-browser'
 import Form from './common/form'
+import * as authService from '../services/authService'
+import { Redirect } from 'react-router-dom';
 
 export default class LoginForm extends Form {
   state = {
@@ -8,8 +10,26 @@ export default class LoginForm extends Form {
     errors: {}
   };
   
-  doSubmit = () => {
-    console.log('Logged in')
+  doSubmit = async () => {
+    const {
+      email,
+      password
+    } = this.state.data
+    
+    try {
+      await authService.login({email, password})
+      const { state } = this.props.location
+      window.location = state? state.from.pathname : '/'
+    } catch (error) {
+      if(error.response && error.response.status === 400){
+        this.setState({
+          errors: {
+            ...this.state.errors,
+            email: error.response.data
+          }
+        })
+      }
+    }
   }
 
   validationSchema = {
@@ -23,6 +43,7 @@ export default class LoginForm extends Form {
   };
 
   render() {
+    if(authService.getCurrentUser()) return <Redirect to="/"/>
     return (
       <div>
         <h1>Login</h1>

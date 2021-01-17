@@ -1,5 +1,5 @@
 const axios = require('axios')
-const {toast} = require('react-toastify')
+const { toast } = require('react-toastify')
 const logger = require('./logger')
 
 axios.interceptors.response.use(response => {
@@ -15,10 +15,15 @@ axios.interceptors.response.use(response => {
   return Promise.reject(error)
 });
 
+const setAuthToken = (token) => {
+  axios.defaults.headers.common['x-auth-token'] = token
+}
+
 module.exports = {
   get: axios.get,
   post: axios.post,
   put: axios.put,
   patch: axios.patch,
-  delete: axios.delete
+  delete: axios.delete,
+  setAuthToken
 }

@@ -1,5 +1,3 @@
 {
-  "API_BASE_URI": "http://localhost:3900",
-  "MOVIES_PATH": "/api/movies",
-  "GENRES_PATH": "/api/genres"
+  "API_BASE_URI": "http://localhost:3900/api"
 }

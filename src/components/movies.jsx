@@ -38,10 +38,6 @@ export default class movies extends Component {
             {
                 label: '',
                 element: movie => <HeartLike id={movie._id} isLiked={movie.liked} onLike={(id) => this.handleMovieLiked(id)} onDislike = {(id) => this.handleMovieDisliked(id)}/>
-            },
-            {
-                label: '',
-                element: movie => <button className="btn btn-danger btn-sm" onClick={() => this.handleDeleteMovie(movie._id)}>Delete</button>
             }
         ],
         columnSort: {path: 'title', order: 'asc'}
@@ -50,7 +46,14 @@ export default class movies extends Component {
     async componentDidMount () {
         const movies = await getMovies()
         const genres = ['All Genres', ...(await getGenres()).map(genre => genre.name)]
-        this.setState({ movies, genres, filteredMovies: movies })
+        const columns = this.state.columns
+        if(this.props.user && this.props.user.admin){
+            columns.push({
+                label: '',
+                element: movie => <button className="btn btn-danger btn-sm" onClick={() => this.handleDeleteMovie(movie._id)}>Delete</button>
+            })
+        }
+        this.setState({ movies, genres, filteredMovies: movies, columns })
     }
 
     handleDeleteMovie = async (id) => {
@@ -166,9 +169,15 @@ export default class movies extends Component {
                             <FilterList filters={genres} currentFilter={currentGenre} onFilterChange={(genre) => this.handleFilterChange(genre)}/>
                         </div>
                         <div className="col">
-                            <Link to="/movies/new">
-                                <button className="btn btn-primary m-2" >New Movie</button>
-                            </Link>
+                            {
+                                this.props.user?
+                                (
+                                    <Link to="/movies/new">
+                                        <button className="btn btn-primary m-2" >New Movie</button>
+                                    </Link>
+                                ): null
+                            }
+                            
                             <h2>Showing {moviesCount} {moviesCount === 1? 'movie' : 'movies'} in the database.</h2>
                             <SearchBox quer={this.state.searchQuery} onChange={(query) => this.handleSearch(query)}/>
                             <Table columns={columns} data={currentPageMovies} columnSort={columnSort} onSort={(columnSort) => this.handleSort(columnSort)}/>
